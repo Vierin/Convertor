@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import * as path from 'path';
 
 export default function Home() {
     const [files, setFiles] = useState<File[]>([]);
@@ -32,16 +33,26 @@ export default function Home() {
           body: formData,
         });
 
-
         if (response.ok) {
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'converted.zip';
+            
+            // Check if only one file was uploaded
+            if (files.length === 1) {
+                a.download = `${path.parse(files[0].name).name}.webp`;
+            } else {
+                a.download = 'converted.zip';
+            }
+
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
+
+            await fetch('/api/delete', {
+                method: 'POST',
+            });
         }
         setIsLoading(false);
     };
