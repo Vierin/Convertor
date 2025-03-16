@@ -37,7 +37,7 @@ export const POST = async (req: Request) => {
 
     const zipPath = 'output/converted.zip';
     const archive = archiver('zip', {
-        zlib: { level: 9 }, // Sets the compression level.
+        zlib: { level: 9 },
     });
 
     const zipStream = fs.createWriteStream(zipPath);
