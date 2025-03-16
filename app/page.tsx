@@ -6,15 +6,14 @@ import axios from 'axios';
 
 type FileStatus = {
   file: File;
-  progress: number;  // Прогресс загрузки
-  isConverting: boolean;  // Статус конвертации
-  isConverted: boolean;   // Статус завершенной конвертации
+  difference?: number;
 };
 
 export default function Home() {
   const [files, setFiles] = useState<File[]>([]);
-  const [fileStatuses, setFileStatuses] = useState<FileStatus[]>([]);  // Статус каждого файла
+  const [fileStatuses, setFileStatuses] = useState<FileStatus[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [totalProgress, setTotalProgress] = useState(0);
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -26,9 +25,7 @@ export default function Home() {
     setFiles(droppedFiles);
     setFileStatuses(droppedFiles.map(file => ({
       file,
-      progress: 0,
-      isConverting: false,
-      isConverted: false,
+      difference: 0,
     })));
   };
 
@@ -41,16 +38,6 @@ export default function Home() {
     if (!files.length) return;
     setIsLoading(true);
 
-    // Обновляем статус загрузки файлов
-    setFileStatuses(prevStatuses =>
-      prevStatuses.map(status => ({
-        ...status,
-        progress: 0,
-        isConverting: false,
-        isConverted: false,
-      }))
-    );
-
     const formData = new FormData();
     files.forEach((file) => formData.append('files', file));
 
@@ -59,17 +46,6 @@ export default function Home() {
       const response = await axios.post('/api/converter', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-        },
-        onUploadProgress: (progressEvent: import('axios').AxiosProgressEvent) => {
-          if (progressEvent.total) {
-            setFileStatuses(prevStatuses =>
-              prevStatuses.map(status =>
-                status.progress < 100
-                  ? { ...status, progress: (progressEvent.loaded / (progressEvent.total)) * 100 }
-                  : status
-              )
-            );
-          }
         }
       });
 
@@ -88,6 +64,13 @@ export default function Home() {
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
+
+        setFileStatuses(prevStatuses =>
+          prevStatuses.map(status => ({
+            ...status,
+            difference: 100
+          }))
+        );
       }
     } catch (error) {
       console.error('Error during conversion', error);
@@ -103,33 +86,32 @@ export default function Home() {
         onDrop={handleDrop}
         onDragOver={handleDragOver}
       >
-        <p>Перетащи сюда изображения (JPG/PNG)</p>
+        <p>Drop your images here! (JPG/PNG)</p>
       </div>
 
-      {/* Список файлов с прогрессом */}
       <div className="w-96 mb-4">
+        <p className='mb-4'>List of images:</p>
         {fileStatuses.map((status, index) => (
-          <div key={index} className="mb-2">
-            <div className="flex justify-between">
+          <div key={index} className="pb-2 border-b border-gray-400 flex justify-between">
               <span>{status.file.name}</span>
-              {status.isConverting && <span>Конвертируется...</span>}
-            </div>
-            <div className="w-full bg-gray-200 h-2">
-              <div
-                className="bg-blue-500 h-2"
-                style={{ width: `${status.progress}%` }}
-              />
-            </div>
+              <span>{status.difference || 0} %</span>
           </div>
         ))}
+      </div>
+
+      <div className="w-1/2 bg-gray-200 h-2 mb-4">
+        <div
+          className="bg-blue-500 h-2"
+          style={{ width: `${totalProgress}%` }}
+        />
       </div>
 
       <button
         onClick={handleConvert}
         disabled={isLoading || !files.length}
-        className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-400"
+        className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-400 cursor-pointer"
       >
-        {isLoading ? 'Конвертация...' : 'Конвертировать в WebP'}
+        {isLoading ? 'Converting...' : 'Convert to WebP'}
       </button>
     </div>
   );
