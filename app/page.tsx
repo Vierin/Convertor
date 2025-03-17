@@ -55,7 +55,7 @@ export default function Home() {
             ],
         });
 
-        setIsLoading(true); // Запускаем загрузку после выбора пути сохранения
+        setIsLoading(true);
 
         const formData = new FormData();
         files.forEach((file) => formData.append('files', file));
@@ -77,7 +77,7 @@ export default function Home() {
           setFileStatuses([]);
           
           alert('Conversion complete! File(s) downloaded.');
-          await axios.post('/api/delete');
+          // await axios.post('/api/delete');
         }
     } catch (error: any) {
         if (error.name === 'AbortError') {
