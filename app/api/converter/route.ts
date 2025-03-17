@@ -49,6 +49,7 @@ export const POST = async (req: Request) => {
     }
 
     await new Promise<void>((resolve, reject) => {
+        zipStream.on('close', resolve);
         archive.on('end', resolve);
         archive.on('error', reject);
         archive.finalize();
