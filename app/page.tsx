@@ -94,16 +94,8 @@ export default function Home() {
         {fileStatuses.map((status, index) => (
           <div key={index} className="pb-2 border-b border-gray-400 flex justify-between">
               <span>{status.file.name}</span>
-              <span>{status.difference || 0} %</span>
           </div>
         ))}
-      </div>
-
-      <div className="w-1/2 bg-gray-200 h-2 mb-4">
-        <div
-          className="bg-blue-500 h-2"
-          style={{ width: `${totalProgress}%` }}
-        />
       </div>
 
       <button
