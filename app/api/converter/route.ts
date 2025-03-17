@@ -6,7 +6,9 @@ import archiver from 'archiver';
 import { exec } from 'child_process';
 import util from 'util';
 
+const cwebp = require('cwebp-bin');
 const execPromise = util.promisify(exec);
+
 
 const isVercel = process.env.VERCEL === '1'
 
@@ -31,7 +33,7 @@ export const POST = async (req: Request) => {
             await fsPromises.writeFile(filePath, Buffer.from(buffer));
 
             const outputFilePath = path.join(outputDir, `${path.parse(file.name).name}.webp`);
-            await execPromise(`npx cwebp ${filePath} -o ${outputFilePath}`);
+            await execPromise(`${cwebp} ${filePath} -o ${outputFilePath}`);
         }
 
         // Если только один файл, возвращаем его как ответ
