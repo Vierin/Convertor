@@ -12,7 +12,7 @@ export const POST = async (req: Request) => {
     const formData = await req.formData();
     const files = formData.getAll('files') as File[];
 
-    const outputDir = 'output';
+    const outputDir = path.join(process.cwd(), 'output');
     await fsPromises.mkdir(outputDir, { recursive: true });
 
     for (const file of files) {
@@ -35,7 +35,7 @@ export const POST = async (req: Request) => {
         });
     }
 
-    const zipPath = 'output/converted.zip';
+    const zipPath = path.join(outputDir, 'converted.zip');
     const archive = archiver('zip', {
         zlib: { level: 9 },
     });
