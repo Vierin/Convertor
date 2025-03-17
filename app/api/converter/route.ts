@@ -5,10 +5,7 @@ import fsPromises from 'fs/promises';
 import archiver from 'archiver';
 import { exec } from 'child_process';
 import util from 'util';
-
-const cwebp = require('cwebp-bin');
-const execPromise = util.promisify(exec);
-
+import sharp from 'sharp';
 
 const isVercel = process.env.VERCEL === '1'
 
@@ -26,17 +23,18 @@ export const POST = async (req: Request) => {
         await fsPromises.mkdir(outputDir, { recursive: true });
         await fsPromises.mkdir(uploadsDir, { recursive: true });
 
-        // Сохраняем загруженные файлы во временную директорию
+        // Convert images to WebP using sharp
         for (const file of files) {
             const buffer = await file.arrayBuffer();
-            const filePath = path.join(uploadsDir, file.name);
-            await fsPromises.writeFile(filePath, Buffer.from(buffer));
-
+            const inputBuffer = Buffer.from(buffer);
             const outputFilePath = path.join(outputDir, `${path.parse(file.name).name}.webp`);
-            await execPromise(`${cwebp} ${filePath} -o ${outputFilePath}`);
+
+            await sharp(inputBuffer)
+                .webp()
+                .toFile(outputFilePath);
         }
 
-        // Если только один файл, возвращаем его как ответ
+        // If only one file, return it as a response
         if (files.length === 1) {
             const singleFileName = path.join(outputDir, `${path.parse(files[0].name).name}.webp`);
             const singleFileBuffer = await fsPromises.readFile(singleFileName);
@@ -48,7 +46,7 @@ export const POST = async (req: Request) => {
             });
         }
 
-        // Архивируем файлы в zip
+        // Archive files into a zip
         const zipPath = path.join(outputDir, 'converted.zip');
         const archive = archiver('zip', {
             zlib: { level: 9 },
@@ -69,7 +67,7 @@ export const POST = async (req: Request) => {
             archive.finalize();
         });
 
-        // Отправляем архив как ответ
+        // Send the archive as a response
         const zipBuffer = await fsPromises.readFile(zipPath);
 
         return new NextResponse(zipBuffer, {
