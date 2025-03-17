@@ -77,7 +77,7 @@ export default function Home() {
           setFileStatuses([]);
           
           alert('Conversion complete! File(s) downloaded.');
-          // await axios.post('/api/delete');
+          await axios.post('/api/delete');
         }
     } catch (error: any) {
         if (error.name === 'AbortError') {
