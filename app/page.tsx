@@ -68,16 +68,16 @@ export default function Home() {
         });
 
         if (response.status === 200) {
-            const blob = new Blob([response.data]);
-            const writableStream = await fileHandle.createWritable();
-            await writableStream.write(blob);
-            await writableStream.close();
+          const blob = new Blob([response.data]);
+          const writableStream = await fileHandle.createWritable();
+          await writableStream.write(blob);
+          await writableStream.close();
 
-            setFiles([]);
-            setFileStatuses([]);
-           
-            alert('Conversion complete! File(s) downloaded.');
-           
+          setFiles([]);
+          setFileStatuses([]);
+          
+          alert('Conversion complete! File(s) downloaded.');
+          await axios.post('/api/delete');
         }
     } catch (error: any) {
         if (error.name === 'AbortError') {
