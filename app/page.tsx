@@ -36,48 +36,62 @@ export default function Home() {
 
   const handleConvert = async () => {
     if (!files.length) return;
-    setIsLoading(true);
 
-    const formData = new FormData();
-    files.forEach((file) => formData.append('files', file));
+    let fileHandle;
 
     try {
-      // Используем axios для отправки формы и отслеживания прогресса
-      const response = await axios.post('/api/converter', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
+        // Показываем диалог выбора файла сразу по клику
+        fileHandle = await (window as any).showSaveFilePicker({
+            suggestedName: files.length === 1
+                ? `${path.parse(files[0].name).name}.webp`
+                : 'converted.zip',
+            types: [
+                {
+                    description: files.length === 1 ? 'WebP Image' : 'ZIP Archive',
+                    accept: files.length === 1
+                        ? { 'image/webp': ['.webp'] }
+                        : { 'application/zip': ['.zip'] },
+                },
+            ],
+        });
+
+        setIsLoading(true); // Запускаем загрузку после выбора пути сохранения
+
+        const formData = new FormData();
+        files.forEach((file) => formData.append('files', file));
+
+        const response = await axios.post('/api/converter', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+            responseType: 'blob',
+        });
+
+        if (response.status === 200) {
+            const blob = new Blob([response.data]);
+            const writableStream = await fileHandle.createWritable();
+            await writableStream.write(blob);
+            await writableStream.close();
+
+            setFiles([]);
+            setFileStatuses([]);
+           
+            alert('Conversion complete! File(s) downloaded.');
+           
         }
-      });
-
-      if (response.status === 200) {
-        const blob = new Blob([response.data]);
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-
-        if (files.length === 1) {
-          a.download = `${path.parse(files[0].name).name}.webp`;
+    } catch (error: any) {
+        if (error.name === 'AbortError') {
+            setFiles([]);
+            setFileStatuses([]);
+            alert('Please select a save location.');
         } else {
-          a.download = 'converted.zip';
+            console.error('Error while saving the file:', error);
         }
-
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
-        setFileStatuses(prevStatuses =>
-          prevStatuses.map(status => ({
-            ...status,
-            difference: 100
-          }))
-        );
-      }
-    } catch (error) {
-      console.error('Error during conversion', error);
+    } finally {
+        setIsLoading(false);
     }
+};
 
-    setIsLoading(false);
-  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
