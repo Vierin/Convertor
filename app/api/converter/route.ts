@@ -3,8 +3,6 @@ import path from 'path';
 import fs from 'fs'; 
 import fsPromises from 'fs/promises';
 import archiver from 'archiver';
-import { exec } from 'child_process';
-import util from 'util';
 import sharp from 'sharp';
 
 const isVercel = process.env.VERCEL === '1'

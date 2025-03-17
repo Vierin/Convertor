@@ -4,8 +4,13 @@ import path from 'path';
 
 export const POST = async () => {
     try {
-        const outputDir = 'output';
-        const uploadsDir = 'uploads';
+        const isVercel = process.env.VERCEL === '1';
+
+        // Use temporary directories based on the environment
+        const baseDir = isVercel ? '/tmp' : path.join(process.cwd(), 'temp');
+        const outputDir = path.join(baseDir, 'output');
+        const uploadsDir = path.join(baseDir, 'uploads');
+
         const filesOutput = await fs.readdir(outputDir);
         const filesUploads = await fs.readdir(uploadsDir);
 
